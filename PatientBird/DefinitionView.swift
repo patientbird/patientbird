@@ -3,6 +3,7 @@ import SwiftUI
 struct DefinitionView: View {
     let entry: DictionaryEntry
     let isDarkMode: Bool
+    let fontDesign: Font.Design
 
     private var textColor: Color {
         isDarkMode ? .white : .black
@@ -22,12 +23,12 @@ struct DefinitionView: View {
                 // Word and phonetic
                 VStack(alignment: .leading, spacing: 4) {
                     Text(entry.word)
-                        .font(.system(size: 32, weight: .bold))
+                        .font(.system(size: 32, weight: .bold, design: fontDesign))
                         .foregroundColor(textColor)
 
                     if let phonetic = entry.phonetic, !phonetic.isEmpty {
                         Text(phonetic)
-                            .font(.system(size: 18))
+                            .font(.system(size: 18, design: fontDesign))
                             .foregroundColor(.gray)
                     }
                 }
@@ -37,7 +38,7 @@ struct DefinitionView: View {
                 ForEach(entry.meanings) { meaning in
                     VStack(alignment: .leading, spacing: 12) {
                         Text(meaning.partOfSpeech)
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 14, weight: .semibold, design: fontDesign))
                             .foregroundColor(badgeText)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
@@ -47,13 +48,13 @@ struct DefinitionView: View {
                         ForEach(Array(meaning.definitions.prefix(3).enumerated()), id: \.element.id) { _, definition in
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(definition.definition)
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 16, design: fontDesign))
                                     .foregroundColor(textColor)
                                     .fixedSize(horizontal: false, vertical: true)
 
                                 if let example = definition.example, !example.isEmpty {
                                     Text("\"\(example)\"")
-                                        .font(.system(size: 15))
+                                        .font(.system(size: 15, design: fontDesign))
                                         .italic()
                                         .foregroundColor(.gray)
                                         .fixedSize(horizontal: false, vertical: true)

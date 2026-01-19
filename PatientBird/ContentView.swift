@@ -1,11 +1,38 @@
 import SwiftUI
 
+enum FontChoice: String, CaseIterable {
+    case sans = "sans"
+    case serif = "serif"
+    case mono = "mono"
+
+    var displayName: String {
+        switch self {
+        case .sans: return "Aa"
+        case .serif: return "Aa"
+        case .mono: return "Aa"
+        }
+    }
+
+    var design: Font.Design {
+        switch self {
+        case .sans: return .default
+        case .serif: return .serif
+        case .mono: return .monospaced
+        }
+    }
+}
+
 struct ContentView: View {
     @StateObject private var dictionaryService = DictionaryService.shared
     @State private var searchText = ""
     @State private var entry: DictionaryEntry?
     @State private var errorMessage: String?
     @AppStorage("isDarkMode") private var isDarkMode = false
+    @AppStorage("fontChoice") private var fontChoice: String = FontChoice.sans.rawValue
+
+    private var selectedFont: FontChoice {
+        FontChoice(rawValue: fontChoice) ?? .sans
+    }
 
     private var backgroundColor: Color {
         isDarkMode ? .black : Color(red: 0.98, green: 0.96, blue: 0.92)
@@ -22,8 +49,15 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                HStack {
+                HStack(spacing: 16) {
                     Spacer()
+                    Button(action: {
+                        cycleFont()
+                    }) {
+                        Text("Aa")
+                            .font(.system(size: 18, design: selectedFont.design))
+                            .foregroundColor(textColor)
+                    }
                     Button(action: {
                         isDarkMode.toggle()
                     }) {
@@ -47,10 +81,10 @@ struct ContentView: View {
                             Spacer()
                             Text(error)
                                 .foregroundColor(secondaryTextColor)
-                                .font(.body)
+                                .font(.system(.body, design: selectedFont.design))
                             Spacer()
                         } else if let entry = entry {
-                            DefinitionView(entry: entry, isDarkMode: isDarkMode)
+                            DefinitionView(entry: entry, isDarkMode: isDarkMode, fontDesign: selectedFont.design)
                         }
                     }
                 }
@@ -65,7 +99,7 @@ struct ContentView: View {
             TextField("Search word", text: $searchText)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .font(.system(size: 18))
+                .font(.system(size: 18, design: selectedFont.design))
                 .foregroundColor(textColor)
                 .disabled(!dictionaryService.isLoaded)
                 .onSubmit {
@@ -90,6 +124,14 @@ struct ContentView: View {
                 .stroke(textColor, lineWidth: 1.5)
         )
         .opacity(dictionaryService.isLoaded ? 1 : 0.5)
+    }
+
+    private func cycleFont() {
+        let allCases = FontChoice.allCases
+        if let currentIndex = allCases.firstIndex(of: selectedFont) {
+            let nextIndex = (currentIndex + 1) % allCases.count
+            fontChoice = allCases[nextIndex].rawValue
+        }
     }
 
     private func search() {
