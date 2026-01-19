@@ -2,58 +2,64 @@ import Foundation
 
 enum DictionaryError: Error, LocalizedError {
     case wordNotFound
-    case networkError
-    case invalidResponse
+    case dictionaryNotLoaded
 
     var errorDescription: String? {
         switch self {
         case .wordNotFound:
             return "Word not found"
-        case .networkError:
-            return "Network error"
-        case .invalidResponse:
-            return "Invalid response"
+        case .dictionaryNotLoaded:
+            return "Dictionary failed to load"
         }
     }
 }
 
 class DictionaryService {
     static let shared = DictionaryService()
-    private let baseURL = "https://api.dictionaryapi.dev/api/v2/entries/en/"
+    private var dictionary: [String: String] = [:]
+    private var isLoaded = false
 
-    private init() {}
+    private init() {
+        loadDictionary()
+    }
 
-    func lookup(_ word: String) async throws -> DictionaryEntry {
+    private func loadDictionary() {
+        guard let url = Bundle.main.url(forResource: "dictionary", withExtension: "json") else {
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            dictionary = try JSONDecoder().decode([String: String].self, from: data)
+            isLoaded = true
+        } catch {
+            print("Failed to load dictionary: \(error)")
+        }
+    }
+
+    func lookup(_ word: String) throws -> DictionaryEntry {
+        guard isLoaded else {
+            throw DictionaryError.dictionaryNotLoaded
+        }
+
         let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !trimmed.isEmpty else {
             throw DictionaryError.wordNotFound
         }
 
-        guard let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let url = URL(string: baseURL + encoded) else {
-            throw DictionaryError.invalidResponse
-        }
-
-        let (data, response) = try await URLSession.shared.data(from: url)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw DictionaryError.networkError
-        }
-
-        if httpResponse.statusCode == 404 {
+        guard let definition = dictionary[trimmed] else {
             throw DictionaryError.wordNotFound
         }
 
-        guard httpResponse.statusCode == 200 else {
-            throw DictionaryError.networkError
-        }
-
-        let entries = try JSONDecoder().decode([DictionaryEntry].self, from: data)
-
-        guard let entry = entries.first else {
-            throw DictionaryError.wordNotFound
-        }
-
-        return entry
+        return DictionaryEntry(
+            word: trimmed,
+            phonetic: nil,
+            meanings: [
+                Meaning(
+                    partOfSpeech: "definition",
+                    definitions: [Definition(definition: definition, example: nil)]
+                )
+            ]
+        )
     }
 }

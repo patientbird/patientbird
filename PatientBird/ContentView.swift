@@ -3,13 +3,12 @@ import SwiftUI
 struct ContentView: View {
     @State private var searchText = ""
     @State private var entry: DictionaryEntry?
-    @State private var isLoading = false
     @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if entry == nil && !isLoading && errorMessage == nil {
+                if entry == nil && errorMessage == nil {
                     Spacer()
                     searchField
                     Spacer()
@@ -18,12 +17,7 @@ struct ContentView: View {
                         searchField
                             .padding(.top, 20)
 
-                        if isLoading {
-                            Spacer()
-                            ProgressView()
-                                .tint(.black)
-                            Spacer()
-                        } else if let error = errorMessage {
+                        if let error = errorMessage {
                             Spacer()
                             Text(error)
                                 .foregroundColor(.gray)
@@ -74,28 +68,15 @@ struct ContentView: View {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return }
 
-        isLoading = true
         errorMessage = nil
         entry = nil
 
-        Task {
-            do {
-                let result = try await DictionaryService.shared.lookup(query)
-                await MainActor.run {
-                    entry = result
-                    isLoading = false
-                }
-            } catch let error as DictionaryError {
-                await MainActor.run {
-                    errorMessage = error.errorDescription
-                    isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    errorMessage = "Something went wrong"
-                    isLoading = false
-                }
-            }
+        do {
+            entry = try DictionaryService.shared.lookup(query)
+        } catch let error as DictionaryError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = "Something went wrong"
         }
     }
 }
