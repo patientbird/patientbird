@@ -14,6 +14,7 @@
 		A1B2C3D4E5F60005 /* DictionaryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60015 /* DictionaryModels.swift */; };
 		A1B2C3D4E5F60006 /* DefinitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60016 /* DefinitionView.swift */; };
 		A1B2C3D4E5F60007 /* dictionary.json in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60017 /* dictionary.json */; };
+		A1B2C3D4E5F60008 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60018 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,7 @@
 		A1B2C3D4E5F60015 /* DictionaryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryModels.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60016 /* DefinitionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefinitionView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60017 /* dictionary.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = dictionary.json; sourceTree = "<group>"; };
+		A1B2C3D4E5F60018 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 				A1B2C3D4E5F60014 /* DictionaryService.swift */,
 				A1B2C3D4E5F60015 /* DictionaryModels.swift */,
 				A1B2C3D4E5F60017 /* dictionary.json */,
+				A1B2C3D4E5F60018 /* LaunchScreen.storyboard */,
 				A1B2C3D4E5F60013 /* Assets.xcassets */,
 			);
 			path = PatientBird;
@@ -128,6 +131,7 @@
 			files = (
 				A1B2C3D4E5F60003 /* Assets.xcassets in Resources */,
 				A1B2C3D4E5F60007 /* dictionary.json in Resources */,
+				A1B2C3D4E5F60008 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -280,7 +284,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -308,7 +312,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
