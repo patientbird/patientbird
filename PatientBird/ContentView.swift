@@ -5,10 +5,35 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var entry: DictionaryEntry?
     @State private var errorMessage: String?
+    @AppStorage("isDarkMode") private var isDarkMode = false
+
+    private var backgroundColor: Color {
+        isDarkMode ? .black : Color(red: 0.98, green: 0.96, blue: 0.92)
+    }
+
+    private var textColor: Color {
+        isDarkMode ? .white : .black
+    }
+
+    private var secondaryTextColor: Color {
+        isDarkMode ? .gray : .gray
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        isDarkMode.toggle()
+                    }) {
+                        Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(textColor)
+                    }
+                }
+                .padding(.top, 12)
+
                 if entry == nil && errorMessage == nil {
                     Spacer()
                     searchField
@@ -21,17 +46,17 @@ struct ContentView: View {
                         if let error = errorMessage {
                             Spacer()
                             Text(error)
-                                .foregroundColor(.gray)
+                                .foregroundColor(secondaryTextColor)
                                 .font(.body)
                             Spacer()
                         } else if let entry = entry {
-                            DefinitionView(entry: entry)
+                            DefinitionView(entry: entry, isDarkMode: isDarkMode)
                         }
                     }
                 }
             }
             .padding(.horizontal, 24)
-            .background(Color.white)
+            .background(backgroundColor)
         }
     }
 
@@ -41,7 +66,7 @@ struct ContentView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.system(size: 18))
-                .foregroundColor(.black)
+                .foregroundColor(textColor)
                 .disabled(!dictionaryService.isLoaded)
                 .onSubmit {
                     search()
@@ -54,7 +79,7 @@ struct ContentView: View {
                     errorMessage = nil
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.gray)
+                        .foregroundColor(secondaryTextColor)
                 }
             }
         }
@@ -62,7 +87,7 @@ struct ContentView: View {
         .padding(.vertical, 14)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.black, lineWidth: 1.5)
+                .stroke(textColor, lineWidth: 1.5)
         )
         .opacity(dictionaryService.isLoaded ? 1 : 0.5)
     }
