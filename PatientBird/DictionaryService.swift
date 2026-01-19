@@ -21,8 +21,8 @@ class DictionaryService: ObservableObject {
     @Published var isLoaded = false
 
     private init() {
-        Task {
-            await loadDictionary()
+        Task.detached(priority: .userInitiated) {
+            await self.loadDictionary()
         }
     }
 
@@ -33,8 +33,11 @@ class DictionaryService: ObservableObject {
 
         do {
             let data = try Data(contentsOf: url)
-            dictionary = try JSONDecoder().decode([String: String].self, from: data)
-            isLoaded = true
+            let decoded = try JSONDecoder().decode([String: String].self, from: data)
+            await MainActor.run {
+                self.dictionary = decoded
+                self.isLoaded = true
+            }
         } catch {
             print("Failed to load dictionary: \(error)")
         }

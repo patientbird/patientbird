@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var entry: DictionaryEntry?
     @State private var errorMessage: String?
+    @State private var recentSearchesCache: [String] = []
     @AppStorage("isDarkMode") private var isDarkMode = false
     @AppStorage("fontChoice") private var fontChoice: String = FontChoice.sans.rawValue
     @AppStorage("recentSearches") private var recentSearchesData: Data = Data()
@@ -26,16 +27,6 @@ struct ContentView: View {
 
     private var selectedFont: FontChoice {
         FontChoice(rawValue: fontChoice) ?? .sans
-    }
-
-    private var recentSearches: [String] {
-        get {
-            (try? JSONDecoder().decode([String].self, from: recentSearchesData)) ?? []
-        }
-    }
-
-    private func saveRecentSearches(_ searches: [String]) {
-        recentSearchesData = (try? JSONEncoder().encode(searches)) ?? Data()
     }
 
     private var backgroundColor: Color {
@@ -51,62 +42,69 @@ struct ContentView: View {
     }
 
     private var showRecentSearches: Bool {
-        isSearchFocused && searchText.isEmpty && !recentSearches.isEmpty && entry == nil && errorMessage == nil
+        isSearchFocused && searchText.isEmpty && !recentSearchesCache.isEmpty && entry == nil && errorMessage == nil
     }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                HStack(spacing: 16) {
-                    Spacer()
-                    Button(action: {
-                        cycleFont()
-                    }) {
-                        Text("Aa")
-                            .font(.system(size: 18, design: selectedFont.design))
-                            .foregroundColor(textColor)
+            ZStack {
+                backgroundColor
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        isSearchFocused = false
                     }
-                    Button(action: {
-                        isDarkMode.toggle()
-                    }) {
-                        Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(textColor)
-                    }
-                }
-                .padding(.top, 12)
 
-                if entry == nil && errorMessage == nil {
-                    Spacer()
-                    VStack(spacing: 0) {
-                        searchField
-                        if showRecentSearches {
-                            recentSearchesView
+                VStack(spacing: 0) {
+                    HStack(spacing: 16) {
+                        Spacer()
+                        Button(action: {
+                            cycleFont()
+                        }) {
+                            Text("Aa")
+                                .font(.system(size: 18, design: selectedFont.design))
+                                .foregroundColor(textColor)
+                        }
+                        Button(action: {
+                            isDarkMode.toggle()
+                        }) {
+                            Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(textColor)
                         }
                     }
-                    Spacer()
-                } else {
-                    VStack(spacing: 0) {
-                        searchField
-                            .padding(.top, 20)
+                    .padding(.top, 12)
 
-                        if let error = errorMessage {
-                            Spacer()
-                            Text(error)
-                                .foregroundColor(secondaryTextColor)
-                                .font(.system(.body, design: selectedFont.design))
-                            Spacer()
-                        } else if let entry = entry {
-                            DefinitionView(entry: entry, isDarkMode: isDarkMode, fontDesign: selectedFont.design)
+                    if entry == nil && errorMessage == nil {
+                        Spacer()
+                        VStack(spacing: 0) {
+                            searchField
+                            if showRecentSearches {
+                                recentSearchesView
+                            }
+                        }
+                        Spacer()
+                    } else {
+                        VStack(spacing: 0) {
+                            searchField
+                                .padding(.top, 20)
+
+                            if let error = errorMessage {
+                                Spacer()
+                                Text(error)
+                                    .foregroundColor(secondaryTextColor)
+                                    .font(.system(.body, design: selectedFont.design))
+                                Spacer()
+                            } else if let entry = entry {
+                                DefinitionView(entry: entry, isDarkMode: isDarkMode, fontDesign: selectedFont.design)
+                            }
                         }
                     }
                 }
+                .padding(.horizontal, 24)
             }
-            .padding(.horizontal, 24)
-            .background(backgroundColor)
-            .onTapGesture {
-                isSearchFocused = false
-            }
+        }
+        .onAppear {
+            loadRecentSearches()
         }
     }
 
@@ -145,7 +143,7 @@ struct ContentView: View {
 
     private var recentSearchesView: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(recentSearches, id: \.self) { word in
+            ForEach(recentSearchesCache, id: \.self) { word in
                 Button(action: {
                     searchText = word
                     search()
@@ -165,7 +163,7 @@ struct ContentView: View {
             }
 
             Button(action: {
-                saveRecentSearches([])
+                clearRecentSearches()
             }) {
                 Text("Clear history")
                     .font(.system(size: 14, design: selectedFont.design))
@@ -175,6 +173,19 @@ struct ContentView: View {
             }
         }
         .padding(.top, 8)
+    }
+
+    private func loadRecentSearches() {
+        recentSearchesCache = (try? JSONDecoder().decode([String].self, from: recentSearchesData)) ?? []
+    }
+
+    private func saveRecentSearches() {
+        recentSearchesData = (try? JSONEncoder().encode(recentSearchesCache)) ?? Data()
+    }
+
+    private func clearRecentSearches() {
+        recentSearchesCache = []
+        saveRecentSearches()
     }
 
     private func cycleFont() {
@@ -204,12 +215,12 @@ struct ContentView: View {
     }
 
     private func addToRecentSearches(_ word: String) {
-        var searches = recentSearches.filter { $0 != word }
-        searches.insert(word, at: 0)
-        if searches.count > 10 {
-            searches = Array(searches.prefix(10))
+        recentSearchesCache.removeAll { $0 == word }
+        recentSearchesCache.insert(word, at: 0)
+        if recentSearchesCache.count > 10 {
+            recentSearchesCache = Array(recentSearchesCache.prefix(10))
         }
-        saveRecentSearches(searches)
+        saveRecentSearches()
     }
 }
 
