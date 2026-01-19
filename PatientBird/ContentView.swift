@@ -5,14 +5,6 @@ enum FontChoice: String, CaseIterable {
     case serif = "serif"
     case mono = "mono"
 
-    var displayName: String {
-        switch self {
-        case .sans: return "Aa"
-        case .serif: return "Aa"
-        case .mono: return "Aa"
-        }
-    }
-
     var design: Font.Design {
         switch self {
         case .sans: return .default
@@ -29,9 +21,21 @@ struct ContentView: View {
     @State private var errorMessage: String?
     @AppStorage("isDarkMode") private var isDarkMode = false
     @AppStorage("fontChoice") private var fontChoice: String = FontChoice.sans.rawValue
+    @AppStorage("recentSearches") private var recentSearchesData: Data = Data()
+    @FocusState private var isSearchFocused: Bool
 
     private var selectedFont: FontChoice {
         FontChoice(rawValue: fontChoice) ?? .sans
+    }
+
+    private var recentSearches: [String] {
+        get {
+            (try? JSONDecoder().decode([String].self, from: recentSearchesData)) ?? []
+        }
+    }
+
+    private func saveRecentSearches(_ searches: [String]) {
+        recentSearchesData = (try? JSONEncoder().encode(searches)) ?? Data()
     }
 
     private var backgroundColor: Color {
@@ -43,7 +47,11 @@ struct ContentView: View {
     }
 
     private var secondaryTextColor: Color {
-        isDarkMode ? .gray : .gray
+        .gray
+    }
+
+    private var showRecentSearches: Bool {
+        isSearchFocused && searchText.isEmpty && !recentSearches.isEmpty && entry == nil && errorMessage == nil
     }
 
     var body: some View {
@@ -70,7 +78,12 @@ struct ContentView: View {
 
                 if entry == nil && errorMessage == nil {
                     Spacer()
-                    searchField
+                    VStack(spacing: 0) {
+                        searchField
+                        if showRecentSearches {
+                            recentSearchesView
+                        }
+                    }
                     Spacer()
                 } else {
                     VStack(spacing: 0) {
@@ -91,6 +104,9 @@ struct ContentView: View {
             }
             .padding(.horizontal, 24)
             .background(backgroundColor)
+            .onTapGesture {
+                isSearchFocused = false
+            }
         }
     }
 
@@ -102,6 +118,7 @@ struct ContentView: View {
                 .font(.system(size: 18, design: selectedFont.design))
                 .foregroundColor(textColor)
                 .disabled(!dictionaryService.isLoaded)
+                .focused($isSearchFocused)
                 .onSubmit {
                     search()
                 }
@@ -126,6 +143,40 @@ struct ContentView: View {
         .opacity(dictionaryService.isLoaded ? 1 : 0.5)
     }
 
+    private var recentSearchesView: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(recentSearches, id: \.self) { word in
+                Button(action: {
+                    searchText = word
+                    search()
+                }) {
+                    HStack {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 14))
+                            .foregroundColor(secondaryTextColor)
+                        Text(word)
+                            .font(.system(size: 16, design: selectedFont.design))
+                            .foregroundColor(textColor)
+                        Spacer()
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                }
+            }
+
+            Button(action: {
+                saveRecentSearches([])
+            }) {
+                Text("Clear history")
+                    .font(.system(size: 14, design: selectedFont.design))
+                    .foregroundColor(secondaryTextColor)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+            }
+        }
+        .padding(.top, 8)
+    }
+
     private func cycleFont() {
         let allCases = FontChoice.allCases
         if let currentIndex = allCases.firstIndex(of: selectedFont) {
@@ -138,16 +189,27 @@ struct ContentView: View {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return }
 
+        isSearchFocused = false
         errorMessage = nil
         entry = nil
 
         do {
             entry = try DictionaryService.shared.lookup(query)
+            addToRecentSearches(query.lowercased())
         } catch let error as DictionaryError {
             errorMessage = error.errorDescription
         } catch {
             errorMessage = "Something went wrong"
         }
+    }
+
+    private func addToRecentSearches(_ word: String) {
+        var searches = recentSearches.filter { $0 != word }
+        searches.insert(word, at: 0)
+        if searches.count > 10 {
+            searches = Array(searches.prefix(10))
+        }
+        saveRecentSearches(searches)
     }
 }
 
