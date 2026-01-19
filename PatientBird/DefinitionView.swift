@@ -31,7 +31,7 @@ struct DefinitionView: View {
                             .background(Color.black)
                             .cornerRadius(4)
 
-                        ForEach(Array(meaning.definitions.prefix(3).enumerated()), id: \.element.id) { index, definition in
+                        ForEach(Array(meaning.definitions.prefix(3).enumerated()), id: \.element.id) { _, definition in
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(definition.definition)
                                     .font(.system(size: 16))

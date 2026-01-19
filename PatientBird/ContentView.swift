@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var dictionaryService = DictionaryService.shared
     @State private var searchText = ""
     @State private var entry: DictionaryEntry?
     @State private var errorMessage: String?
@@ -41,6 +42,7 @@ struct ContentView: View {
                 .autocorrectionDisabled()
                 .font(.system(size: 18))
                 .foregroundColor(.black)
+                .disabled(!dictionaryService.isLoaded)
                 .onSubmit {
                     search()
                 }
@@ -62,6 +64,7 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.black, lineWidth: 1.5)
         )
+        .opacity(dictionaryService.isLoaded ? 1 : 0.5)
     }
 
     private func search() {

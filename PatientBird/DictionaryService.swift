@@ -9,21 +9,24 @@ enum DictionaryError: Error, LocalizedError {
         case .wordNotFound:
             return "Word not found"
         case .dictionaryNotLoaded:
-            return "Dictionary failed to load"
+            return "Dictionary loading..."
         }
     }
 }
 
-class DictionaryService {
+@MainActor
+class DictionaryService: ObservableObject {
     static let shared = DictionaryService()
     private var dictionary: [String: String] = [:]
-    private var isLoaded = false
+    @Published var isLoaded = false
 
     private init() {
-        loadDictionary()
+        Task {
+            await loadDictionary()
+        }
     }
 
-    private func loadDictionary() {
+    private func loadDictionary() async {
         guard let url = Bundle.main.url(forResource: "dictionary", withExtension: "json") else {
             return
         }
