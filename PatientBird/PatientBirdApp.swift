@@ -4,7 +4,7 @@ import SwiftUI
 struct PatientBirdApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
         }
     }
 }
