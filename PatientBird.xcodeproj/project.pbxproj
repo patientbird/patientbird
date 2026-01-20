@@ -13,6 +13,12 @@
 		A1B2C3D4E5F60004 /* DictionaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60014 /* DictionaryService.swift */; };
 		A1B2C3D4E5F60005 /* DictionaryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60015 /* DictionaryModels.swift */; };
 		A1B2C3D4E5F60006 /* DefinitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60016 /* DefinitionView.swift */; };
+		A1B2C3D4E5F60007 /* BookModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60017 /* BookModels.swift */; };
+		A1B2C3D4E5F60008 /* BookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60018 /* BookService.swift */; };
+		A1B2C3D4E5F60009 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60019 /* MainTabView.swift */; };
+		A1B2C3D4E5F6000A /* BookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6001A /* BookListView.swift */; };
+		A1B2C3D4E5F6000B /* BookVocabularyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6001B /* BookVocabularyView.swift */; };
+		A1B2C3D4E5F6000C /* WordDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6001C /* WordDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +29,12 @@
 		A1B2C3D4E5F60014 /* DictionaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryService.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60015 /* DictionaryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryModels.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60016 /* DefinitionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefinitionView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60017 /* BookModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookModels.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60018 /* BookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookService.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60019 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6001A /* BookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookListView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6001B /* BookVocabularyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookVocabularyView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6001C /* WordDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,10 +60,16 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D4E5F60011 /* PatientBirdApp.swift */,
+				A1B2C3D4E5F60019 /* MainTabView.swift */,
 				A1B2C3D4E5F60012 /* ContentView.swift */,
 				A1B2C3D4E5F60016 /* DefinitionView.swift */,
+				A1B2C3D4E5F6001A /* BookListView.swift */,
+				A1B2C3D4E5F6001B /* BookVocabularyView.swift */,
+				A1B2C3D4E5F6001C /* WordDetailView.swift */,
 				A1B2C3D4E5F60014 /* DictionaryService.swift */,
 				A1B2C3D4E5F60015 /* DictionaryModels.swift */,
+				A1B2C3D4E5F60018 /* BookService.swift */,
+				A1B2C3D4E5F60017 /* BookModels.swift */,
 				A1B2C3D4E5F60013 /* Assets.xcassets */,
 			);
 			path = PatientBird;
@@ -135,10 +153,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B2C3D4E5F60001 /* PatientBirdApp.swift in Sources */,
+				A1B2C3D4E5F60009 /* MainTabView.swift in Sources */,
 				A1B2C3D4E5F60002 /* ContentView.swift in Sources */,
 				A1B2C3D4E5F60004 /* DictionaryService.swift in Sources */,
 				A1B2C3D4E5F60005 /* DictionaryModels.swift in Sources */,
 				A1B2C3D4E5F60006 /* DefinitionView.swift in Sources */,
+				A1B2C3D4E5F6000A /* BookListView.swift in Sources */,
+				A1B2C3D4E5F6000B /* BookVocabularyView.swift in Sources */,
+				A1B2C3D4E5F6000C /* WordDetailView.swift in Sources */,
+				A1B2C3D4E5F60008 /* BookService.swift in Sources */,
+				A1B2C3D4E5F60007 /* BookModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
