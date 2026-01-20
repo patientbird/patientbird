@@ -76,10 +76,29 @@ struct ContentView: View {
 
                     if entry == nil && errorMessage == nil {
                         Spacer()
-                        VStack(spacing: 0) {
-                            searchField
-                            if showRecentSearches {
-                                recentSearchesView
+                        if dictionaryService.loadFailed {
+                            VStack(spacing: 12) {
+                                Image(systemName: "exclamationmark.triangle")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.orange)
+                                Text("Failed to load dictionary")
+                                    .font(.system(.body, design: selectedFont.design))
+                                    .foregroundColor(secondaryTextColor)
+                            }
+                        } else if !dictionaryService.isLoaded {
+                            VStack(spacing: 12) {
+                                ProgressView()
+                                    .scaleEffect(1.2)
+                                Text("Loading dictionary...")
+                                    .font(.system(.body, design: selectedFont.design))
+                                    .foregroundColor(secondaryTextColor)
+                            }
+                        } else {
+                            VStack(spacing: 0) {
+                                searchField
+                                if showRecentSearches {
+                                    recentSearchesView
+                                }
                             }
                         }
                         Spacer()

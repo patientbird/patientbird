@@ -3,6 +3,7 @@ import Foundation
 enum DictionaryError: Error, LocalizedError {
     case wordNotFound
     case dictionaryNotLoaded
+    case loadFailed
 
     var errorDescription: String? {
         switch self {
@@ -10,6 +11,8 @@ enum DictionaryError: Error, LocalizedError {
             return "Word not found"
         case .dictionaryNotLoaded:
             return "Dictionary loading..."
+        case .loadFailed:
+            return "Failed to load dictionary"
         }
     }
 }
@@ -20,6 +23,7 @@ class DictionaryService: ObservableObject {
     private var websterDictionary: [String: String] = [:]
     private var supplementaryDictionary: [String: String] = [:]
     @Published var isLoaded = false
+    @Published var loadFailed = false
 
     private init() {
         Task.detached(priority: .userInitiated) {
@@ -33,6 +37,9 @@ class DictionaryService: ObservableObject {
 
     private func loadWebster() async {
         guard let url = Bundle.main.url(forResource: "dictionary", withExtension: "json") else {
+            await MainActor.run {
+                self.loadFailed = true
+            }
             return
         }
 
@@ -45,6 +52,9 @@ class DictionaryService: ObservableObject {
             }
         } catch {
             print("Failed to load Webster's dictionary: \(error)")
+            await MainActor.run {
+                self.loadFailed = true
+            }
         }
     }
 
@@ -65,6 +75,9 @@ class DictionaryService: ObservableObject {
     }
 
     func lookup(_ word: String) throws -> DictionaryEntry {
+        if loadFailed {
+            throw DictionaryError.loadFailed
+        }
         guard isLoaded else {
             throw DictionaryError.dictionaryNotLoaded
         }
@@ -74,34 +87,24 @@ class DictionaryService: ObservableObject {
             throw DictionaryError.wordNotFound
         }
 
-        // Try Webster's first
-        if let definition = websterDictionary[trimmed] {
-            return DictionaryEntry(
-                word: trimmed,
-                phonetic: nil,
-                meanings: [
-                    Meaning(
-                        partOfSpeech: "definition",
-                        definitions: [Definition(definition: definition, example: nil)]
-                    )
-                ]
-            )
-        }
-
-        // Fall back to supplementary dictionary
-        if let definition = supplementaryDictionary[trimmed] {
-            return DictionaryEntry(
-                word: trimmed,
-                phonetic: nil,
-                meanings: [
-                    Meaning(
-                        partOfSpeech: "definition",
-                        definitions: [Definition(definition: definition, example: nil)]
-                    )
-                ]
-            )
+        // Try Webster's first, then fall back to supplementary
+        if let definition = websterDictionary[trimmed] ?? supplementaryDictionary[trimmed] {
+            return makeEntry(word: trimmed, definition: definition)
         }
 
         throw DictionaryError.wordNotFound
+    }
+
+    private func makeEntry(word: String, definition: String) -> DictionaryEntry {
+        DictionaryEntry(
+            word: word,
+            phonetic: nil,
+            meanings: [
+                Meaning(
+                    partOfSpeech: "definition",
+                    definitions: [Definition(definition: definition, example: nil)]
+                )
+            ]
+        )
     }
 }
