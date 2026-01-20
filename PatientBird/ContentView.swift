@@ -109,9 +109,29 @@ struct ContentView: View {
 
                             if let error = errorMessage {
                                 Spacer()
-                                Text(error)
-                                    .foregroundColor(secondaryTextColor)
-                                    .font(.system(.body, design: selectedFont.design))
+                                VStack(spacing: 20) {
+                                    Text(error)
+                                        .foregroundColor(secondaryTextColor)
+                                        .font(.system(.body, design: selectedFont.design))
+
+                                    if error == DictionaryError.wordNotFound.errorDescription {
+                                        HStack(spacing: 16) {
+                                            Button(action: openWikipedia) {
+                                                Label("Wikipedia", systemImage: "book.closed")
+                                                    .font(.system(.subheadline, design: selectedFont.design))
+                                            }
+                                            .buttonStyle(.bordered)
+                                            .tint(textColor)
+
+                                            Button(action: openWebSearch) {
+                                                Label("Search Web", systemImage: "magnifyingglass")
+                                                    .font(.system(.subheadline, design: selectedFont.design))
+                                            }
+                                            .buttonStyle(.bordered)
+                                            .tint(textColor)
+                                        }
+                                    }
+                                }
                                 Spacer()
                             } else if let entry = entry {
                                 DefinitionView(entry: entry, isDarkMode: isDarkMode, fontDesign: selectedFont.design)
@@ -240,6 +260,24 @@ struct ContentView: View {
             recentSearchesCache = Array(recentSearchesCache.prefix(10))
         }
         saveRecentSearches()
+    }
+
+    private func openWikipedia() {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "https://en.wikipedia.org/wiki/\(encoded)") else {
+            return
+        }
+        UIApplication.shared.open(url)
+    }
+
+    private func openWebSearch() {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "https://www.google.com/search?q=define+\(encoded)") else {
+            return
+        }
+        UIApplication.shared.open(url)
     }
 }
 
