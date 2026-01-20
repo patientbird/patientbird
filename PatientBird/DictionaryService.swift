@@ -17,16 +17,21 @@ enum DictionaryError: Error, LocalizedError {
 @MainActor
 class DictionaryService: ObservableObject {
     static let shared = DictionaryService()
-    private var dictionary: [String: String] = [:]
+    private var websterDictionary: [String: String] = [:]
+    private var supplementaryDictionary: [String: String] = [:]
     @Published var isLoaded = false
 
     private init() {
         Task.detached(priority: .userInitiated) {
-            await self.loadDictionary()
+            // Load Webster's first - this enables search
+            await self.loadWebster()
+
+            // Then load supplementary dictionary in background
+            await self.loadSupplementary()
         }
     }
 
-    private func loadDictionary() async {
+    private func loadWebster() async {
         guard let url = Bundle.main.url(forResource: "dictionary", withExtension: "json") else {
             return
         }
@@ -35,11 +40,27 @@ class DictionaryService: ObservableObject {
             let data = try Data(contentsOf: url)
             let decoded = try JSONDecoder().decode([String: String].self, from: data)
             await MainActor.run {
-                self.dictionary = decoded
+                self.websterDictionary = decoded
                 self.isLoaded = true
             }
         } catch {
-            print("Failed to load dictionary: \(error)")
+            print("Failed to load Webster's dictionary: \(error)")
+        }
+    }
+
+    private func loadSupplementary() async {
+        guard let url = Bundle.main.url(forResource: "supplementary", withExtension: "json") else {
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoded = try JSONDecoder().decode([String: String].self, from: data)
+            await MainActor.run {
+                self.supplementaryDictionary = decoded
+            }
+        } catch {
+            print("Failed to load supplementary dictionary: \(error)")
         }
     }
 
@@ -53,19 +74,34 @@ class DictionaryService: ObservableObject {
             throw DictionaryError.wordNotFound
         }
 
-        guard let definition = dictionary[trimmed] else {
-            throw DictionaryError.wordNotFound
+        // Try Webster's first
+        if let definition = websterDictionary[trimmed] {
+            return DictionaryEntry(
+                word: trimmed,
+                phonetic: nil,
+                meanings: [
+                    Meaning(
+                        partOfSpeech: "definition",
+                        definitions: [Definition(definition: definition, example: nil)]
+                    )
+                ]
+            )
         }
 
-        return DictionaryEntry(
-            word: trimmed,
-            phonetic: nil,
-            meanings: [
-                Meaning(
-                    partOfSpeech: "definition",
-                    definitions: [Definition(definition: definition, example: nil)]
-                )
-            ]
-        )
+        // Fall back to supplementary dictionary
+        if let definition = supplementaryDictionary[trimmed] {
+            return DictionaryEntry(
+                word: trimmed,
+                phonetic: nil,
+                meanings: [
+                    Meaning(
+                        partOfSpeech: "definition",
+                        definitions: [Definition(definition: definition, example: nil)]
+                    )
+                ]
+            )
+        }
+
+        throw DictionaryError.wordNotFound
     }
 }
