@@ -45,7 +45,7 @@ struct DefinitionView: View {
                             .background(badgeBackground)
                             .cornerRadius(4)
 
-                        ForEach(Array(meaning.definitions.prefix(3).enumerated()), id: \.element.id) { _, definition in
+                        ForEach(Array(meaning.definitions.prefix(3).enumerated()), id: \.element.id) { index, definition in
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(definition.definition)
                                     .font(.system(size: 16, design: fontDesign))
@@ -61,6 +61,11 @@ struct DefinitionView: View {
                                 }
                             }
                             .padding(.leading, 4)
+
+                            if index < min(meaning.definitions.count, 3) - 1 {
+                                Divider()
+                                    .padding(.vertical, 8)
+                            }
                         }
                     }
                 }

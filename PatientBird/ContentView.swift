@@ -56,6 +56,13 @@ struct ContentView: View {
 
                 VStack(spacing: 0) {
                     HStack(spacing: 16) {
+                        if entry != nil || errorMessage != nil {
+                            Button(action: resetToHome) {
+                                Image(systemName: "house")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(textColor)
+                            }
+                        }
                         Spacer()
                         Button(action: {
                             cycleFont()
@@ -149,26 +156,32 @@ struct ContentView: View {
 
     private var searchField: some View {
         HStack {
-            TextField("Search word", text: $searchText)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .font(.system(size: 18, design: selectedFont.design))
-                .foregroundColor(textColor)
-                .disabled(!dictionaryService.isLoaded)
-                .focused($isSearchFocused)
-                .onSubmit {
-                    search()
+            ZStack(alignment: .leading) {
+                if searchText.isEmpty {
+                    Text("Search word")
+                        .font(.system(size: 18, design: selectedFont.design))
+                        .foregroundColor(isDarkMode ? .gray : .gray)
                 }
+                TextField("", text: $searchText)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .font(.system(size: 18, design: selectedFont.design))
+                    .foregroundColor(textColor)
+                    .disabled(!dictionaryService.isLoaded)
+                    .focused($isSearchFocused)
+                    .onSubmit {
+                        search()
+                    }
+            }
 
             if !searchText.isEmpty {
-                Button(action: {
-                    searchText = ""
-                    entry = nil
-                    errorMessage = nil
-                }) {
+                Button(action: clearSearch) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(secondaryTextColor)
+                        .font(.system(size: 18))
                 }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
             }
         }
         .padding(.horizontal, 16)
@@ -177,6 +190,10 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(textColor, lineWidth: 1.5)
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isSearchFocused = true
+        }
         .opacity(dictionaryService.isLoaded ? 1 : 0.5)
     }
 
@@ -260,6 +277,20 @@ struct ContentView: View {
             recentSearchesCache = Array(recentSearchesCache.prefix(10))
         }
         saveRecentSearches()
+    }
+
+    private func clearSearch() {
+        searchText = ""
+        entry = nil
+        errorMessage = nil
+        isSearchFocused = true
+    }
+
+    private func resetToHome() {
+        searchText = ""
+        entry = nil
+        errorMessage = nil
+        isSearchFocused = false
     }
 
     private func openWikipedia() {
