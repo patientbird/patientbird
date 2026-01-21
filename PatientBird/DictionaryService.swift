@@ -96,66 +96,15 @@ class DictionaryService: ObservableObject {
     }
 
     private func makeEntry(word: String, definition: String) -> DictionaryEntry {
-        let cleanedDefinitions = cleanDefinition(definition)
-
-        return DictionaryEntry(
+        DictionaryEntry(
             word: word,
             phonetic: nil,
             meanings: [
                 Meaning(
                     partOfSpeech: "definition",
-                    definitions: cleanedDefinitions.map { Definition(definition: $0, example: nil) }
+                    definitions: [Definition(definition: definition, example: nil)]
                 )
             ]
         )
-    }
-
-    private func cleanDefinition(_ raw: String) -> [String] {
-        // Split on double newlines to get separate meanings/paragraphs
-        let paragraphs = raw.components(separatedBy: "\n\n")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
-        var results: [String] = []
-
-        for paragraph in paragraphs {
-            // Skip cross-reference lines and technical details
-            if paragraph.hasPrefix("--") || paragraph.hasPrefix("Note:") {
-                continue
-            }
-
-            // Skip paragraphs that look like tables or lists of data
-            if paragraph.contains("Symbol.Name.") || paragraph.contains("º min") {
-                continue
-            }
-
-            // Clean up the paragraph
-            var cleaned = paragraph
-                .replacingOccurrences(of: "\n", with: " ")
-                .replacingOccurrences(of: "  ", with: " ")
-
-            // Truncate very long paragraphs (keep first ~300 chars ending at word boundary)
-            if cleaned.count > 350 {
-                if let endIndex = cleaned.index(cleaned.startIndex, offsetBy: 300, limitedBy: cleaned.endIndex),
-                   let spaceIndex = cleaned[endIndex...].firstIndex(of: " ") {
-                    cleaned = String(cleaned[..<spaceIndex]) + "..."
-                }
-            }
-
-            results.append(cleaned)
-
-            // Limit to 3 definitions
-            if results.count >= 3 {
-                break
-            }
-        }
-
-        // If no valid paragraphs found, return original (truncated)
-        if results.isEmpty {
-            let truncated = String(raw.prefix(400))
-            return [truncated.count < raw.count ? truncated + "..." : truncated]
-        }
-
-        return results
     }
 }

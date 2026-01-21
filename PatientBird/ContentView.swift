@@ -281,8 +281,6 @@ struct ContentView: View {
 
     private func clearSearch() {
         searchText = ""
-        entry = nil
-        errorMessage = nil
         isSearchFocused = true
     }
 
