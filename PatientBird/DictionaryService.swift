@@ -17,26 +17,28 @@ enum DictionaryError: Error, LocalizedError {
     }
 }
 
+// Structure to decode the new dictionary format
+private struct RawDefinition: Codable {
+    let pos: String
+    let def: String
+    let ex: String?
+}
+
 @MainActor
 class DictionaryService: ObservableObject {
     static let shared = DictionaryService()
-    private var websterDictionary: [String: String] = [:]
-    private var supplementaryDictionary: [String: String] = [:]
+    private var dictionary: [String: [RawDefinition]] = [:]
     @Published var isLoaded = false
     @Published var loadFailed = false
 
     private init() {
         Task.detached(priority: .userInitiated) {
-            // Load Webster's first - this enables search
-            await self.loadWebster()
-
-            // Then load supplementary dictionary in background
-            await self.loadSupplementary()
+            await self.loadDictionary()
         }
     }
 
-    private func loadWebster() async {
-        guard let url = Bundle.main.url(forResource: "dictionary", withExtension: "json") else {
+    private func loadDictionary() async {
+        guard let url = Bundle.main.url(forResource: "modern_dictionary", withExtension: "json") else {
             await MainActor.run {
                 self.loadFailed = true
             }
@@ -45,32 +47,16 @@ class DictionaryService: ObservableObject {
 
         do {
             let data = try Data(contentsOf: url)
-            let decoded = try JSONDecoder().decode([String: String].self, from: data)
+            let decoded = try JSONDecoder().decode([String: [RawDefinition]].self, from: data)
             await MainActor.run {
-                self.websterDictionary = decoded
+                self.dictionary = decoded
                 self.isLoaded = true
             }
         } catch {
-            print("Failed to load Webster's dictionary: \(error)")
+            print("Failed to load dictionary: \(error)")
             await MainActor.run {
                 self.loadFailed = true
             }
-        }
-    }
-
-    private func loadSupplementary() async {
-        guard let url = Bundle.main.url(forResource: "supplementary", withExtension: "json") else {
-            return
-        }
-
-        do {
-            let data = try Data(contentsOf: url)
-            let decoded = try JSONDecoder().decode([String: String].self, from: data)
-            await MainActor.run {
-                self.supplementaryDictionary = decoded
-            }
-        } catch {
-            print("Failed to load supplementary dictionary: \(error)")
         }
     }
 
@@ -87,24 +73,35 @@ class DictionaryService: ObservableObject {
             throw DictionaryError.wordNotFound
         }
 
-        // Try Webster's first, then fall back to supplementary
-        if let definition = websterDictionary[trimmed] ?? supplementaryDictionary[trimmed] {
-            return makeEntry(word: trimmed, definition: definition)
+        guard let rawDefs = dictionary[trimmed] else {
+            throw DictionaryError.wordNotFound
         }
 
-        throw DictionaryError.wordNotFound
+        return makeEntry(word: trimmed, rawDefinitions: rawDefs)
     }
 
-    private func makeEntry(word: String, definition: String) -> DictionaryEntry {
-        DictionaryEntry(
+    private func makeEntry(word: String, rawDefinitions: [RawDefinition]) -> DictionaryEntry {
+        // Group definitions by part of speech
+        var grouped: [String: [Definition]] = [:]
+
+        for raw in rawDefinitions {
+            let def = Definition(definition: raw.def, example: raw.ex)
+            if grouped[raw.pos] != nil {
+                grouped[raw.pos]?.append(def)
+            } else {
+                grouped[raw.pos] = [def]
+            }
+        }
+
+        // Convert to Meaning objects
+        let meanings = grouped.map { pos, defs in
+            Meaning(partOfSpeech: pos.lowercased(), definitions: defs)
+        }.sorted { $0.partOfSpeech < $1.partOfSpeech }
+
+        return DictionaryEntry(
             word: word,
             phonetic: nil,
-            meanings: [
-                Meaning(
-                    partOfSpeech: "definition",
-                    definitions: [Definition(definition: definition, example: nil)]
-                )
-            ]
+            meanings: meanings
         )
     }
 }
