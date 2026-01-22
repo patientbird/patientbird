@@ -357,6 +357,7 @@ struct CreditsView: View {
 
                         Link("View License", destination: URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")!)
                             .font(.system(size: 14, design: fontDesign))
+                            .foregroundColor(textColor)
                     }
                     .padding()
                     .frame(maxWidth: .infinity)
