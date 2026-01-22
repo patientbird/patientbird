@@ -62,6 +62,8 @@ struct ContentView: View {
                                 Image(systemName: "house")
                                     .font(.system(size: 18))
                                     .foregroundColor(textColor)
+                                    .frame(width: 44, height: 44)
+                                    .contentShape(Rectangle())
                             }
                         }
                         Spacer()
@@ -71,6 +73,8 @@ struct ContentView: View {
                             Image(systemName: "info.circle")
                                 .font(.system(size: 18))
                                 .foregroundColor(textColor)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
                         Button(action: {
                             cycleFont()
@@ -78,6 +82,8 @@ struct ContentView: View {
                             Text("Aa")
                                 .font(.system(size: 18, design: selectedFont.design))
                                 .foregroundColor(textColor)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
                         Button(action: {
                             isDarkMode.toggle()
@@ -85,6 +91,8 @@ struct ContentView: View {
                             Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
                                 .font(.system(size: 20))
                                 .foregroundColor(textColor)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
                     }
                     .padding(.top, 12)
@@ -178,6 +186,7 @@ struct ContentView: View {
                     .autocorrectionDisabled()
                     .font(.system(size: 18, design: selectedFont.design))
                     .foregroundColor(textColor)
+                    .tint(textColor)
                     .disabled(!dictionaryService.isLoaded)
                     .focused($isSearchFocused)
                     .onSubmit {
