@@ -68,15 +68,6 @@ struct ContentView: View {
                         }
                         Spacer()
                         Button(action: {
-                            showingCredits = true
-                        }) {
-                            Image(systemName: "info.circle")
-                                .font(.system(size: 18))
-                                .foregroundColor(textColor)
-                                .frame(width: 44, height: 44)
-                                .contentShape(Rectangle())
-                        }
-                        Button(action: {
                             cycleFont()
                         }) {
                             Text("Aa")
@@ -163,6 +154,19 @@ struct ContentView: View {
                     }
                 }
                 .padding(.horizontal, 24)
+            }
+            .overlay(alignment: .bottomTrailing) {
+                Button(action: {
+                    showingCredits = true
+                }) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 20))
+                        .foregroundColor(textColor)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .padding(.trailing, 24)
+                .padding(.bottom, 24)
             }
         }
         .onAppear {
