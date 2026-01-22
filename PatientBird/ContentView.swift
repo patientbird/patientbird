@@ -171,7 +171,7 @@ struct ContentView: View {
                 if searchText.isEmpty {
                     Text("Search word")
                         .font(.system(size: 18, design: selectedFont.design))
-                        .foregroundColor(isDarkMode ? .gray : .gray)
+                        .foregroundColor(.gray)
                 }
                 TextField("", text: $searchText)
                     .textInputAutocapitalization(.never)
@@ -340,21 +340,22 @@ struct CreditsView: View {
                 backgroundColor.ignoresSafeArea()
 
                 VStack(spacing: 24) {
-                    Text("PatientBird")
-                        .font(.system(size: 28, weight: .bold, design: fontDesign))
+                    Text("App developed by PatientBird")
+                        .font(.system(size: 22, weight: .bold, design: fontDesign))
                         .foregroundColor(textColor)
+                        .multilineTextAlignment(.center)
 
                     VStack(spacing: 16) {
                         Text("Dictionary Data")
                             .font(.system(size: 18, weight: .semibold, design: fontDesign))
                             .foregroundColor(textColor)
 
-                        Text("Definitions from Wiktionary, licensed under CC BY-SA 3.0")
+                        Text("Definitions from Wiktionary, licensed under CC BY-SA 4.0")
                             .font(.system(size: 14, design: fontDesign))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
 
-                        Link("View License", destination: URL(string: "https://creativecommons.org/licenses/by-sa/3.0/")!)
+                        Link("View License", destination: URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")!)
                             .font(.system(size: 14, design: fontDesign))
                     }
                     .padding()
