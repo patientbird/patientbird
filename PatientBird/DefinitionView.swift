@@ -22,9 +22,22 @@ struct DefinitionView: View {
             VStack(alignment: .leading, spacing: 20) {
                 // Word and phonetic
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.word)
-                        .font(.system(size: 32, weight: .bold, design: fontDesign))
-                        .foregroundColor(textColor)
+                    HStack(alignment: .center, spacing: 12) {
+                        Text(entry.word)
+                            .font(.system(size: 32, weight: .bold, design: fontDesign))
+                            .foregroundColor(textColor)
+
+                        Button(action: {
+                            DictionaryService.shared.speak(entry.word)
+                        }) {
+                            Image(systemName: "speaker.wave.2.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(textColor.opacity(0.7))
+                        }
+                        .buttonStyle(.plain)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                    }
 
                     if let phonetic = entry.phonetic, !phonetic.isEmpty {
                         Text(phonetic)

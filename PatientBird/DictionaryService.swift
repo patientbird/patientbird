@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 
 enum DictionaryError: Error, LocalizedError {
     case wordNotFound
@@ -37,6 +38,14 @@ class DictionaryService: ObservableObject {
     @Published var isLoaded = false
     @Published var loadFailed = false
     @Published var wordOfTheDay: WordOfTheDay?
+
+    // Speech synthesizer for pronunciation
+    private let speechSynthesizer = AVSpeechSynthesizer()
+
+    // Blocklist for names and political figures to keep app neutral
+    private let blockedWords: Set<String> = [
+        "donald trump", "donaldtrump"
+    ]
 
     // Curated list of interesting words
     private let curatedWords = [
@@ -112,11 +121,27 @@ class DictionaryService: ObservableObject {
             throw DictionaryError.wordNotFound
         }
 
+        // Check blocklist
+        if blockedWords.contains(trimmed) {
+            throw DictionaryError.wordNotFound
+        }
+
         guard let rawDefs = dictionary[trimmed] else {
             throw DictionaryError.wordNotFound
         }
 
         return makeEntry(word: trimmed, rawDefinitions: rawDefs)
+    }
+
+    func speak(_ word: String) {
+        speechSynthesizer.stopSpeaking(at: .immediate)
+
+        let utterance = AVSpeechUtterance(string: word)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.4
+        utterance.pitchMultiplier = 1.0
+
+        speechSynthesizer.speak(utterance)
     }
 
     func findSuggestion(_ word: String) -> String? {
