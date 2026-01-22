@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var entry: DictionaryEntry?
     @State private var errorMessage: String?
+    @State private var suggestion: String?
     @State private var showingCredits = false
     @AppStorage("isDarkMode") private var isDarkMode = false
     @AppStorage("fontChoice") private var fontChoice: String = FontChoice.sans.rawValue
@@ -124,6 +125,25 @@ struct ContentView: View {
                                         .font(.system(.body, design: selectedFont.design))
 
                                     if error == DictionaryError.wordNotFound.errorDescription {
+                                        if let suggestedWord = suggestion {
+                                            Button(action: {
+                                                searchText = suggestedWord
+                                                search()
+                                            }) {
+                                                HStack(spacing: 4) {
+                                                    Text("Did you mean")
+                                                        .foregroundColor(secondaryTextColor)
+                                                    Text(suggestedWord)
+                                                        .fontWeight(.semibold)
+                                                        .foregroundColor(textColor)
+                                                    Text("?")
+                                                        .foregroundColor(secondaryTextColor)
+                                                }
+                                                .font(.system(.body, design: selectedFont.design))
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+
                                         HStack(spacing: 16) {
                                             Button(action: openWikipedia) {
                                                 Label("Wikipedia", systemImage: "book.closed")
@@ -269,11 +289,15 @@ struct ContentView: View {
         isSearchFocused = false
         errorMessage = nil
         entry = nil
+        suggestion = nil
 
         do {
             entry = try DictionaryService.shared.lookup(query)
         } catch let error as DictionaryError {
             errorMessage = error.errorDescription
+            if error == .wordNotFound {
+                suggestion = DictionaryService.shared.findSuggestion(query)
+            }
         } catch {
             errorMessage = "Something went wrong"
         }
@@ -288,6 +312,7 @@ struct ContentView: View {
         searchText = ""
         entry = nil
         errorMessage = nil
+        suggestion = nil
         isSearchFocused = false
     }
 

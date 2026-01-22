@@ -119,6 +119,76 @@ class DictionaryService: ObservableObject {
         return makeEntry(word: trimmed, rawDefinitions: rawDefs)
     }
 
+    func findSuggestion(_ word: String) -> String? {
+        guard isLoaded else { return nil }
+
+        let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !trimmed.isEmpty else { return nil }
+
+        // Already exists, no suggestion needed
+        if dictionary[trimmed] != nil { return nil }
+
+        var bestMatch: String?
+        var bestDistance = Int.max
+
+        // Only check words within reasonable length difference
+        let wordLength = trimmed.count
+        let maxLengthDiff = 3
+        let maxDistance = min(3, wordLength / 2 + 1) // Scale with word length
+
+        for dictWord in dictionary.keys {
+            // Skip if length difference is too large
+            if abs(dictWord.count - wordLength) > maxLengthDiff {
+                continue
+            }
+
+            let distance = levenshteinDistance(trimmed, dictWord)
+
+            if distance < bestDistance && distance <= maxDistance {
+                bestDistance = distance
+                bestMatch = dictWord
+            }
+
+            // Perfect match found within tolerance
+            if distance == 1 {
+                return dictWord
+            }
+        }
+
+        return bestMatch
+    }
+
+    private func levenshteinDistance(_ s1: String, _ s2: String) -> Int {
+        let s1Array = Array(s1)
+        let s2Array = Array(s2)
+        let m = s1Array.count
+        let n = s2Array.count
+
+        if m == 0 { return n }
+        if n == 0 { return m }
+
+        // Use two rows instead of full matrix for memory efficiency
+        var prevRow = Array(0...n)
+        var currRow = Array(repeating: 0, count: n + 1)
+
+        for i in 1...m {
+            currRow[0] = i
+
+            for j in 1...n {
+                let cost = s1Array[i - 1] == s2Array[j - 1] ? 0 : 1
+                currRow[j] = min(
+                    currRow[j - 1] + 1,      // insertion
+                    prevRow[j] + 1,           // deletion
+                    prevRow[j - 1] + cost     // substitution
+                )
+            }
+
+            swap(&prevRow, &currRow)
+        }
+
+        return prevRow[n]
+    }
+
     private func makeEntry(word: String, rawDefinitions: [RawDefinition]) -> DictionaryEntry {
         // Group definitions by part of speech
         var grouped: [String: [Definition]] = [:]
