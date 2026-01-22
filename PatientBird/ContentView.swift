@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var entry: DictionaryEntry?
     @State private var errorMessage: String?
     @State private var recentSearchesCache: [String] = []
+    @State private var showingCredits = false
     @AppStorage("isDarkMode") private var isDarkMode = false
     @AppStorage("fontChoice") private var fontChoice: String = FontChoice.sans.rawValue
     @AppStorage("recentSearches") private var recentSearchesData: Data = Data()
@@ -64,6 +65,13 @@ struct ContentView: View {
                             }
                         }
                         Spacer()
+                        Button(action: {
+                            showingCredits = true
+                        }) {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 18))
+                                .foregroundColor(textColor)
+                        }
                         Button(action: {
                             cycleFont()
                         }) {
@@ -151,6 +159,9 @@ struct ContentView: View {
         }
         .onAppear {
             loadRecentSearches()
+        }
+        .sheet(isPresented: $showingCredits) {
+            CreditsView(isDarkMode: isDarkMode, fontDesign: selectedFont.design)
         }
     }
 
@@ -307,6 +318,66 @@ struct ContentView: View {
             return
         }
         UIApplication.shared.open(url)
+    }
+}
+
+struct CreditsView: View {
+    let isDarkMode: Bool
+    let fontDesign: Font.Design
+    @Environment(\.dismiss) private var dismiss
+
+    private var backgroundColor: Color {
+        isDarkMode ? .black : Color(red: 0.98, green: 0.96, blue: 0.92)
+    }
+
+    private var textColor: Color {
+        isDarkMode ? .white : .black
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                backgroundColor.ignoresSafeArea()
+
+                VStack(spacing: 24) {
+                    Text("PatientBird")
+                        .font(.system(size: 28, weight: .bold, design: fontDesign))
+                        .foregroundColor(textColor)
+
+                    VStack(spacing: 16) {
+                        Text("Dictionary Data")
+                            .font(.system(size: 18, weight: .semibold, design: fontDesign))
+                            .foregroundColor(textColor)
+
+                        Text("Definitions from Wiktionary, licensed under CC BY-SA 3.0")
+                            .font(.system(size: 14, design: fontDesign))
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+
+                        Link("View License", destination: URL(string: "https://creativecommons.org/licenses/by-sa/3.0/")!)
+                            .font(.system(size: 14, design: fontDesign))
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+
+                    Spacer()
+                }
+                .padding(24)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(textColor)
+                }
+            }
+        }
     }
 }
 
