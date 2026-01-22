@@ -19,11 +19,9 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var entry: DictionaryEntry?
     @State private var errorMessage: String?
-    @State private var recentSearchesCache: [String] = []
     @State private var showingCredits = false
     @AppStorage("isDarkMode") private var isDarkMode = false
     @AppStorage("fontChoice") private var fontChoice: String = FontChoice.sans.rawValue
-    @AppStorage("recentSearches") private var recentSearchesData: Data = Data()
     @FocusState private var isSearchFocused: Bool
 
     private var selectedFont: FontChoice {
@@ -40,10 +38,6 @@ struct ContentView: View {
 
     private var secondaryTextColor: Color {
         .gray
-    }
-
-    private var showRecentSearches: Bool {
-        isSearchFocused && searchText.isEmpty && !recentSearchesCache.isEmpty && entry == nil && errorMessage == nil
     }
 
     var body: some View {
@@ -108,12 +102,7 @@ struct ContentView: View {
                                     .foregroundColor(secondaryTextColor)
                             }
                         } else {
-                            VStack(spacing: 0) {
-                                searchField
-                                if showRecentSearches {
-                                    recentSearchesView
-                                }
-                            }
+                            searchField
                         }
                         Spacer()
                     } else {
@@ -169,9 +158,6 @@ struct ContentView: View {
                 .padding(.bottom, 24)
             }
         }
-        .onAppear {
-            loadRecentSearches()
-        }
         .sheet(isPresented: $showingCredits) {
             CreditsView(isDarkMode: isDarkMode, fontDesign: selectedFont.design)
         }
@@ -221,53 +207,6 @@ struct ContentView: View {
         .opacity(dictionaryService.isLoaded ? 1 : 0.5)
     }
 
-    private var recentSearchesView: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(recentSearchesCache, id: \.self) { word in
-                Button(action: {
-                    searchText = word
-                    search()
-                }) {
-                    HStack {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 14))
-                            .foregroundColor(secondaryTextColor)
-                        Text(word)
-                            .font(.system(size: 16, design: selectedFont.design))
-                            .foregroundColor(textColor)
-                        Spacer()
-                    }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 16)
-                }
-            }
-
-            Button(action: {
-                clearRecentSearches()
-            }) {
-                Text("Clear history")
-                    .font(.system(size: 14, design: selectedFont.design))
-                    .foregroundColor(secondaryTextColor)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 16)
-            }
-        }
-        .padding(.top, 8)
-    }
-
-    private func loadRecentSearches() {
-        recentSearchesCache = (try? JSONDecoder().decode([String].self, from: recentSearchesData)) ?? []
-    }
-
-    private func saveRecentSearches() {
-        recentSearchesData = (try? JSONEncoder().encode(recentSearchesCache)) ?? Data()
-    }
-
-    private func clearRecentSearches() {
-        recentSearchesCache = []
-        saveRecentSearches()
-    }
-
     private func cycleFont() {
         let allCases = FontChoice.allCases
         if let currentIndex = allCases.firstIndex(of: selectedFont) {
@@ -286,21 +225,11 @@ struct ContentView: View {
 
         do {
             entry = try DictionaryService.shared.lookup(query)
-            addToRecentSearches(query.lowercased())
         } catch let error as DictionaryError {
             errorMessage = error.errorDescription
         } catch {
             errorMessage = "Something went wrong"
         }
-    }
-
-    private func addToRecentSearches(_ word: String) {
-        recentSearchesCache.removeAll { $0 == word }
-        recentSearchesCache.insert(word, at: 0)
-        if recentSearchesCache.count > 10 {
-            recentSearchesCache = Array(recentSearchesCache.prefix(10))
-        }
-        saveRecentSearches()
     }
 
     private func clearSearch() {
