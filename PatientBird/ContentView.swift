@@ -102,7 +102,13 @@ struct ContentView: View {
                                     .foregroundColor(secondaryTextColor)
                             }
                         } else {
-                            searchField
+                            VStack(spacing: 32) {
+                                searchField
+
+                                if let wotd = dictionaryService.wordOfTheDay {
+                                    wordOfTheDayView(wotd)
+                                }
+                            }
                         }
                         Spacer()
                     } else {
@@ -205,6 +211,47 @@ struct ContentView: View {
             isSearchFocused = true
         }
         .opacity(dictionaryService.isLoaded ? 1 : 0.5)
+    }
+
+    private func wordOfTheDayView(_ wotd: WordOfTheDay) -> some View {
+        Button(action: {
+            searchText = wotd.word
+            search()
+        }) {
+            VStack(spacing: 12) {
+                Text("Word of the Day")
+                    .font(.system(size: 12, weight: .medium, design: selectedFont.design))
+                    .foregroundColor(secondaryTextColor)
+                    .textCase(.uppercase)
+                    .tracking(1)
+
+                Text(wotd.word)
+                    .font(.system(size: 24, weight: .bold, design: selectedFont.design))
+                    .foregroundColor(textColor)
+
+                Text(wotd.partOfSpeech)
+                    .font(.system(size: 14, weight: .medium, design: selectedFont.design))
+                    .foregroundColor(secondaryTextColor)
+                    .italic()
+
+                Text(wotd.definition)
+                    .font(.system(size: 16, design: selectedFont.design))
+                    .foregroundColor(textColor.opacity(0.8))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isDarkMode ? Color.white.opacity(0.05) : Color.black.opacity(0.03))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(textColor.opacity(0.1), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private func cycleFont() {

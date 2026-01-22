@@ -24,12 +24,31 @@ private struct RawDefinition: Codable {
     let ex: String?
 }
 
+struct WordOfTheDay {
+    let word: String
+    let partOfSpeech: String
+    let definition: String
+}
+
 @MainActor
 class DictionaryService: ObservableObject {
     static let shared = DictionaryService()
     private var dictionary: [String: [RawDefinition]] = [:]
     @Published var isLoaded = false
     @Published var loadFailed = false
+    @Published var wordOfTheDay: WordOfTheDay?
+
+    // Curated list of interesting words
+    private let curatedWords = [
+        "ephemeral", "serendipity", "mellifluous", "petrichor", "luminous",
+        "eloquent", "resilient", "ethereal", "serene", "vivacious",
+        "ineffable", "sanguine", "ebullient", "halcyon", "bucolic",
+        "effervescent", "incandescent", "redolent", "sonorous", "dulcet",
+        "gossamer", "languid", "limpid", "lissome", "lucid",
+        "quixotic", "sagacious", "salubrious", "scintillating", "sublime",
+        "surreptitious", "tenacious", "ubiquitous", "verdant", "wistful",
+        "zealous", "aesthetic", "benevolent", "diaphanous", "resplendent"
+    ]
 
     private init() {
         Task.detached(priority: .userInitiated) {
@@ -51,12 +70,32 @@ class DictionaryService: ObservableObject {
             await MainActor.run {
                 self.dictionary = decoded
                 self.isLoaded = true
+                self.updateWordOfTheDay()
             }
         } catch {
             print("Failed to load dictionary: \(error)")
             await MainActor.run {
                 self.loadFailed = true
             }
+        }
+    }
+
+    private func updateWordOfTheDay() {
+        let calendar = Calendar.current
+        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: Date()) ?? 1
+        let year = calendar.component(.year, from: Date())
+        let seed = dayOfYear + (year * 1000)
+
+        let wordIndex = seed % curatedWords.count
+        let selectedWord = curatedWords[wordIndex]
+
+        if let rawDefs = dictionary[selectedWord],
+           let firstDef = rawDefs.first {
+            wordOfTheDay = WordOfTheDay(
+                word: selectedWord,
+                partOfSpeech: firstDef.pos.lowercased(),
+                definition: firstDef.def
+            )
         }
     }
 
