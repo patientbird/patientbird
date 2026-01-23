@@ -47,17 +47,8 @@ class DictionaryService: ObservableObject {
         "donald trump", "donaldtrump"
     ]
 
-    // Curated list of interesting words
-    private let curatedWords = [
-        "ephemeral", "serendipity", "mellifluous", "petrichor", "luminous",
-        "eloquent", "resilient", "ethereal", "serene", "vivacious",
-        "ineffable", "sanguine", "ebullient", "halcyon", "bucolic",
-        "effervescent", "incandescent", "redolent", "sonorous", "dulcet",
-        "gossamer", "languid", "limpid", "lissome", "lucid",
-        "quixotic", "sagacious", "salubrious", "scintillating", "sublime",
-        "surreptitious", "tenacious", "ubiquitous", "verdant", "wistful",
-        "zealous", "aesthetic", "benevolent", "diaphanous", "resplendent"
-    ]
+    // App Group identifier for sharing with widget
+    private let appGroupID = "group.com.patientbird.dictionary"
 
     private init() {
         Task.detached(priority: .userInitiated) {
@@ -90,21 +81,46 @@ class DictionaryService: ObservableObject {
     }
 
     private func updateWordOfTheDay() {
+        // Filter for good WOTD candidates
+        let candidates = dictionary.keys.filter { word in
+            // Must be 4-15 characters
+            guard word.count >= 4 && word.count <= 15 else { return false }
+            // Must be only letters (no spaces, hyphens, numbers)
+            guard word.allSatisfy({ $0.isLetter }) else { return false }
+            // Must not be in blocklist
+            guard !blockedWords.contains(word) else { return false }
+            // Must have a valid definition
+            guard let defs = dictionary[word], !defs.isEmpty else { return false }
+            return true
+        }.sorted() // Sort for consistent ordering
+
+        guard !candidates.isEmpty else { return }
+
+        // Use date-based seed for deterministic daily selection
         let calendar = Calendar.current
         let dayOfYear = calendar.ordinality(of: .day, in: .year, for: Date()) ?? 1
         let year = calendar.component(.year, from: Date())
         let seed = dayOfYear + (year * 1000)
 
-        let wordIndex = seed % curatedWords.count
-        let selectedWord = curatedWords[wordIndex]
+        let wordIndex = seed % candidates.count
+        let selectedWord = candidates[wordIndex]
 
         if let rawDefs = dictionary[selectedWord],
            let firstDef = rawDefs.first {
-            wordOfTheDay = WordOfTheDay(
+            let wotd = WordOfTheDay(
                 word: selectedWord,
                 partOfSpeech: firstDef.pos.lowercased(),
                 definition: firstDef.def
             )
+            wordOfTheDay = wotd
+
+            // Save to App Group for widget access
+            if let sharedDefaults = UserDefaults(suiteName: appGroupID) {
+                sharedDefaults.set(selectedWord, forKey: "wotd_word")
+                sharedDefaults.set(firstDef.pos.lowercased(), forKey: "wotd_pos")
+                sharedDefaults.set(firstDef.def, forKey: "wotd_def")
+                sharedDefaults.set(Date(), forKey: "wotd_date")
+            }
         }
     }
 

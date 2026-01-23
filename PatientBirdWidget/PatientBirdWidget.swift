@@ -9,62 +9,16 @@ struct WordOfTheDayEntry: TimelineEntry {
 }
 
 struct Provider: TimelineProvider {
-    private let curatedWords = [
-        "ephemeral", "serendipity", "mellifluous", "petrichor", "luminous",
-        "eloquent", "resilient", "ethereal", "serene", "vivacious",
-        "ineffable", "sanguine", "ebullient", "halcyon", "bucolic",
-        "effervescent", "incandescent", "redolent", "sonorous", "dulcet",
-        "gossamer", "languid", "limpid", "lissome", "lucid",
-        "quixotic", "sagacious", "salubrious", "scintillating", "sublime",
-        "surreptitious", "tenacious", "ubiquitous", "verdant", "wistful",
-        "zealous", "aesthetic", "benevolent", "diaphanous", "resplendent"
-    ]
+    // App Group identifier - must match the main app
+    private let appGroupID = "group.com.patientbird.dictionary"
 
-    private let definitions: [String: (String, String)] = [
-        "ephemeral": ("adjective", "lasting for a very short time"),
-        "serendipity": ("noun", "the occurrence of events by chance in a happy way"),
-        "mellifluous": ("adjective", "sweet or musical; pleasant to hear"),
-        "petrichor": ("noun", "a pleasant smell after rain falls on dry ground"),
-        "luminous": ("adjective", "full of or shedding light; bright or shining"),
-        "eloquent": ("adjective", "fluent or persuasive in speaking or writing"),
-        "resilient": ("adjective", "able to recover quickly from difficulties"),
-        "ethereal": ("adjective", "extremely delicate and light; heavenly"),
-        "serene": ("adjective", "calm, peaceful, and untroubled"),
-        "vivacious": ("adjective", "attractively lively and animated"),
-        "ineffable": ("adjective", "too great to be expressed in words"),
-        "sanguine": ("adjective", "optimistic or positive, especially in a difficult situation"),
-        "ebullient": ("adjective", "cheerful and full of energy"),
-        "halcyon": ("adjective", "denoting a happy, golden, or prosperous time"),
-        "bucolic": ("adjective", "relating to the pleasant aspects of the countryside"),
-        "effervescent": ("adjective", "vivacious and enthusiastic"),
-        "incandescent": ("adjective", "emitting light as a result of being heated"),
-        "redolent": ("adjective", "strongly reminiscent or suggestive of"),
-        "sonorous": ("adjective", "imposingly deep and full in sound"),
-        "dulcet": ("adjective", "sweet and soothing to hear"),
-        "gossamer": ("adjective", "used to refer to something very light, thin, and delicate"),
-        "languid": ("adjective", "lacking energy or vitality; weak or faint"),
-        "limpid": ("adjective", "completely clear and transparent"),
-        "lissome": ("adjective", "thin, supple, and graceful"),
-        "lucid": ("adjective", "expressed clearly; easy to understand"),
-        "quixotic": ("adjective", "exceedingly idealistic; unrealistic and impractical"),
-        "sagacious": ("adjective", "having keen mental discernment and good judgment"),
-        "salubrious": ("adjective", "health-giving; healthy"),
-        "scintillating": ("adjective", "sparkling or shining brightly"),
-        "sublime": ("adjective", "of outstanding spiritual or artistic worth"),
-        "surreptitious": ("adjective", "kept secret because it would not be approved of"),
-        "tenacious": ("adjective", "holding firmly to something; persistent"),
-        "ubiquitous": ("adjective", "present, appearing, or found everywhere"),
-        "verdant": ("adjective", "green with grass or other rich vegetation"),
-        "wistful": ("adjective", "having or showing a feeling of vague longing"),
-        "zealous": ("adjective", "having great energy or enthusiasm"),
-        "aesthetic": ("adjective", "concerned with beauty or the appreciation of beauty"),
-        "benevolent": ("adjective", "well meaning and kindly"),
-        "diaphanous": ("adjective", "light, delicate, and translucent"),
-        "resplendent": ("adjective", "impressive through being rich or colorful")
-    ]
+    // Fallback for when app hasn't shared data yet
+    private let fallbackWord = "serendipity"
+    private let fallbackPos = "noun"
+    private let fallbackDef = "the occurrence of events by chance in a happy way"
 
     func placeholder(in context: Context) -> WordOfTheDayEntry {
-        WordOfTheDayEntry(date: Date(), word: "serendipity", partOfSpeech: "noun", definition: "the occurrence of events by chance in a happy way")
+        WordOfTheDayEntry(date: Date(), word: fallbackWord, partOfSpeech: fallbackPos, definition: fallbackDef)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WordOfTheDayEntry) -> Void) {
@@ -80,17 +34,16 @@ struct Provider: TimelineProvider {
     }
 
     private func getWordOfTheDay() -> WordOfTheDayEntry {
-        let calendar = Calendar.current
-        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: Date()) ?? 1
-        let year = calendar.component(.year, from: Date())
-        let seed = dayOfYear + (year * 1000)
-        let wordIndex = seed % curatedWords.count
-        let selectedWord = curatedWords[wordIndex]
-
-        if let (pos, def) = definitions[selectedWord] {
-            return WordOfTheDayEntry(date: Date(), word: selectedWord, partOfSpeech: pos, definition: def)
+        // Try to read from shared App Group
+        if let sharedDefaults = UserDefaults(suiteName: appGroupID),
+           let word = sharedDefaults.string(forKey: "wotd_word"),
+           let pos = sharedDefaults.string(forKey: "wotd_pos"),
+           let def = sharedDefaults.string(forKey: "wotd_def") {
+            return WordOfTheDayEntry(date: Date(), word: word, partOfSpeech: pos, definition: def)
         }
-        return WordOfTheDayEntry(date: Date(), word: "serendipity", partOfSpeech: "noun", definition: "the occurrence of events by chance in a happy way")
+
+        // Fallback if app hasn't run yet
+        return WordOfTheDayEntry(date: Date(), word: fallbackWord, partOfSpeech: fallbackPos, definition: fallbackDef)
     }
 }
 
