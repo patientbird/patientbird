@@ -389,7 +389,7 @@ struct CreditsView: View {
                             .font(.system(size: 18, weight: .semibold, design: fontDesign))
                             .foregroundColor(textColor)
 
-                        Text("Definitions from Wiktionary, licensed under CC BY-SA 4.0")
+                        Text("Definitions from Wordset, licensed under CC BY-SA 4.0")
                             .font(.system(size: 14, design: fontDesign))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
