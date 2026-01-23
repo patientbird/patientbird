@@ -187,6 +187,31 @@ struct ContentView: View {
         .sheet(isPresented: $showingCredits) {
             CreditsView(isDarkMode: isDarkMode, fontDesign: selectedFont.design)
         }
+        .onOpenURL { url in
+            handleDeepLink(url)
+        }
+    }
+
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "patientbird" else { return }
+
+        switch url.host {
+        case "search":
+            // Open to home with search focused
+            resetToHome()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isSearchFocused = true
+            }
+        case "word":
+            // Search for the word from the path
+            let word = url.pathComponents.dropFirst().first ?? ""
+            if !word.isEmpty {
+                searchText = word
+                search()
+            }
+        default:
+            break
+        }
     }
 
     private var searchField: some View {

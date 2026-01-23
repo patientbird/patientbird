@@ -9,7 +9,6 @@ struct WordOfTheDayEntry: TimelineEntry {
 }
 
 struct Provider: TimelineProvider {
-    // Curated list of interesting words (same as app)
     private let curatedWords = [
         "ephemeral", "serendipity", "mellifluous", "petrichor", "luminous",
         "eloquent", "resilient", "ethereal", "serene", "vivacious",
@@ -21,7 +20,6 @@ struct Provider: TimelineProvider {
         "zealous", "aesthetic", "benevolent", "diaphanous", "resplendent"
     ]
 
-    // Hardcoded definitions for widget (subset for offline use)
     private let definitions: [String: (String, String)] = [
         "ephemeral": ("adjective", "lasting for a very short time"),
         "serendipity": ("noun", "the occurrence of events by chance in a happy way"),
@@ -70,17 +68,13 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WordOfTheDayEntry) -> Void) {
-        let entry = getWordOfTheDay()
-        completion(entry)
+        completion(getWordOfTheDay())
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WordOfTheDayEntry>) -> Void) {
         let entry = getWordOfTheDay()
-
-        // Update at midnight
         let calendar = Calendar.current
         let tomorrow = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: Date())!)
-
         let timeline = Timeline(entries: [entry], policy: .after(tomorrow))
         completion(timeline)
     }
@@ -90,14 +84,12 @@ struct Provider: TimelineProvider {
         let dayOfYear = calendar.ordinality(of: .day, in: .year, for: Date()) ?? 1
         let year = calendar.component(.year, from: Date())
         let seed = dayOfYear + (year * 1000)
-
         let wordIndex = seed % curatedWords.count
         let selectedWord = curatedWords[wordIndex]
 
         if let (pos, def) = definitions[selectedWord] {
             return WordOfTheDayEntry(date: Date(), word: selectedWord, partOfSpeech: pos, definition: def)
         }
-
         return WordOfTheDayEntry(date: Date(), word: "serendipity", partOfSpeech: "noun", definition: "the occurrence of events by chance in a happy way")
     }
 }
@@ -107,30 +99,62 @@ struct PatientBirdWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Word of the Day")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
+        let isSmall = family == .systemSmall
 
-            Text(entry.word)
-                .font(.system(size: family == .systemSmall ? 20 : 24, weight: .bold))
-                .foregroundColor(.primary)
+        VStack(spacing: isSmall ? 10 : 12) {
+            // Search bar - opens app home
+            Link(destination: URL(string: "patientbird://search")!) {
+                HStack(spacing: 8) {
+                    Image(systemName: "book.closed.fill")
+                        .font(.system(size: isSmall ? 16 : 18, weight: .medium))
+                        .foregroundColor(.white.opacity(0.9))
 
-            Text(entry.partOfSpeech)
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
-                .italic()
-
-            if family != .systemSmall {
-                Text(entry.definition)
-                    .font(.system(size: 14))
-                    .foregroundColor(.primary.opacity(0.8))
-                    .lineLimit(family == .systemMedium ? 2 : 4)
+                    if !isSmall {
+                        Text("Look up a word")
+                            .font(.system(size: 15))
+                            .foregroundColor(.white.opacity(0.5))
+                        Spacer()
+                    }
+                }
+                .padding(.horizontal, isSmall ? 16 : 14)
+                .padding(.vertical, isSmall ? 14 : 12)
+                .frame(maxWidth: .infinity)
+                .background(Color.white.opacity(0.12))
+                .cornerRadius(isSmall ? 16 : 12)
             }
+
+            // Word of the day - opens definition
+            Link(destination: URL(string: "patientbird://word/\(entry.word)")!) {
+                VStack(alignment: .leading, spacing: isSmall ? 3 : 5) {
+                    Text("WORD OF THE DAY")
+                        .font(.system(size: isSmall ? 9 : 10, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.5))
+                        .tracking(0.5)
+
+                    Text(entry.word)
+                        .font(.system(size: isSmall ? 16 : 22, weight: .bold, design: .serif))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+
+                    Text(entry.partOfSpeech)
+                        .font(.system(size: isSmall ? 10 : 11, weight: .medium))
+                        .foregroundColor(.white.opacity(0.6))
+                        .italic()
+
+                    if !isSmall {
+                        Text(entry.definition)
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.8))
+                            .lineLimit(2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding()
+        .padding(14)
     }
 }
 
@@ -140,7 +164,7 @@ struct PatientBirdWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             PatientBirdWidgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(Color(white: 0.11), for: .widget)
         }
         .configurationDisplayName("Word of the Day")
         .description("Learn a new word every day.")
