@@ -99,7 +99,7 @@ struct PatientBirdWidgetEntryView: View {
                         Text(entry.definition)
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.8))
-                            .lineLimit(2)
+                            .lineLimit(3)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
