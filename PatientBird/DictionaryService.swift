@@ -124,6 +124,20 @@ class DictionaryService: ObservableObject {
         }
     }
 
+    func refreshWordOfTheDayIfNeeded() {
+        guard isLoaded else { return }
+
+        // Check if day has changed since last update
+        let calendar = Calendar.current
+        if let lastDate = UserDefaults(suiteName: appGroupID)?.object(forKey: "wotd_date") as? Date {
+            if calendar.isDateInToday(lastDate) {
+                return // Already updated today
+            }
+        }
+
+        updateWordOfTheDay()
+    }
+
     func lookup(_ word: String) throws -> DictionaryEntry {
         if loadFailed {
             throw DictionaryError.loadFailed

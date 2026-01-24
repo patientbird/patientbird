@@ -16,6 +16,7 @@ enum FontChoice: String, CaseIterable {
 
 struct ContentView: View {
     @StateObject private var dictionaryService = DictionaryService.shared
+    @Environment(\.scenePhase) private var scenePhase
     @State private var searchText = ""
     @State private var entry: DictionaryEntry?
     @State private var errorMessage: String?
@@ -51,15 +52,16 @@ struct ContentView: View {
                     }
 
                 VStack(spacing: 0) {
+                    // Top bar: info (left), font & theme (right)
                     HStack(spacing: 16) {
-                        if entry != nil || errorMessage != nil {
-                            Button(action: resetToHome) {
-                                Image(systemName: "house")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(textColor)
-                                    .frame(width: 44, height: 44)
-                                    .contentShape(Rectangle())
-                            }
+                        Button(action: {
+                            showingCredits = true
+                        }) {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 20))
+                                .foregroundColor(textColor)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
                         Spacer()
                         Button(action: {
@@ -83,6 +85,7 @@ struct ContentView: View {
                     }
                     .padding(.top, 12)
 
+                    // Main content area
                     if entry == nil && errorMessage == nil {
                         Spacer()
                         if dictionaryService.loadFailed {
@@ -94,6 +97,7 @@ struct ContentView: View {
                                     .font(.system(.body, design: selectedFont.design))
                                     .foregroundColor(secondaryTextColor)
                             }
+                            Spacer()
                         } else if !dictionaryService.isLoaded {
                             VStack(spacing: 12) {
                                 ProgressView()
@@ -102,86 +106,84 @@ struct ContentView: View {
                                     .font(.system(.body, design: selectedFont.design))
                                     .foregroundColor(secondaryTextColor)
                             }
+                            Spacer()
                         } else {
-                            VStack(spacing: 32) {
-                                searchField
-
+                            // Home screen - WOTD above search bar at bottom
+                            Spacer()
+                            VStack(spacing: 20) {
                                 if let wotd = dictionaryService.wordOfTheDay {
                                     wordOfTheDayView(wotd)
                                 }
+                                searchField
                             }
+                            .padding(.bottom, 32)
                         }
-                        Spacer()
                     } else {
-                        VStack(spacing: 0) {
-                            searchField
-                                .padding(.top, 20)
+                        // Definition or error view
+                        if let error = errorMessage {
+                            Spacer()
+                            VStack(spacing: 20) {
+                                Text(error)
+                                    .foregroundColor(secondaryTextColor)
+                                    .font(.system(.body, design: selectedFont.design))
 
-                            if let error = errorMessage {
-                                Spacer()
-                                VStack(spacing: 20) {
-                                    Text(error)
-                                        .foregroundColor(secondaryTextColor)
-                                        .font(.system(.body, design: selectedFont.design))
-
-                                    if error == DictionaryError.wordNotFound.errorDescription {
-                                        if let suggestedWord = suggestion {
-                                            Button(action: {
-                                                searchText = suggestedWord
-                                                search()
-                                            }) {
-                                                HStack(spacing: 4) {
-                                                    Text("Did you mean")
-                                                        .foregroundColor(secondaryTextColor)
-                                                    Text(suggestedWord)
-                                                        .fontWeight(.semibold)
-                                                        .foregroundColor(textColor)
-                                                    Text("?")
-                                                        .foregroundColor(secondaryTextColor)
-                                                }
-                                                .font(.system(.body, design: selectedFont.design))
+                                if error == DictionaryError.wordNotFound.errorDescription {
+                                    if let suggestedWord = suggestion {
+                                        Button(action: {
+                                            searchText = suggestedWord
+                                            search()
+                                        }) {
+                                            HStack(spacing: 4) {
+                                                Text("Did you mean")
+                                                    .foregroundColor(secondaryTextColor)
+                                                Text(suggestedWord)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundColor(textColor)
+                                                Text("?")
+                                                    .foregroundColor(secondaryTextColor)
                                             }
-                                            .buttonStyle(.plain)
+                                            .font(.system(.body, design: selectedFont.design))
                                         }
+                                        .buttonStyle(.plain)
+                                    }
 
-                                        HStack(spacing: 16) {
-                                            Button(action: openWikipedia) {
-                                                Label("Wikipedia", systemImage: "book.closed")
-                                                    .font(.system(.subheadline, design: selectedFont.design))
-                                            }
-                                            .buttonStyle(.bordered)
-                                            .tint(textColor)
-
-                                            Button(action: openWebSearch) {
-                                                Label("Search Web", systemImage: "magnifyingglass")
-                                                    .font(.system(.subheadline, design: selectedFont.design))
-                                            }
-                                            .buttonStyle(.bordered)
-                                            .tint(textColor)
+                                    HStack(spacing: 16) {
+                                        Button(action: openWikipedia) {
+                                            Label("Wikipedia", systemImage: "book.closed")
+                                                .font(.system(.subheadline, design: selectedFont.design))
                                         }
+                                        .buttonStyle(.bordered)
+                                        .tint(textColor)
+
+                                        Button(action: openWebSearch) {
+                                            Label("Search Web", systemImage: "magnifyingglass")
+                                                .font(.system(.subheadline, design: selectedFont.design))
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .tint(textColor)
                                     }
                                 }
-                                Spacer()
-                            } else if let entry = entry {
-                                DefinitionView(entry: entry, isDarkMode: isDarkMode, fontDesign: selectedFont.design)
+                            }
+                            Spacer()
+                        } else if let entry = entry {
+                            DefinitionView(entry: entry, isDarkMode: isDarkMode, fontDesign: selectedFont.design)
+                        }
+
+                        // Bottom: search bar with home button
+                        HStack(spacing: 12) {
+                            searchField
+                            Button(action: resetToHome) {
+                                Image(systemName: "house")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(textColor)
+                                    .frame(width: 44, height: 44)
+                                    .contentShape(Rectangle())
                             }
                         }
+                        .padding(.bottom, 16)
                     }
                 }
                 .padding(.horizontal, 24)
-            }
-            .overlay(alignment: .bottomTrailing) {
-                Button(action: {
-                    showingCredits = true
-                }) {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 20))
-                        .foregroundColor(textColor)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .padding(.trailing, 24)
-                .padding(.bottom, 24)
             }
         }
         .sheet(isPresented: $showingCredits) {
@@ -189,6 +191,11 @@ struct ContentView: View {
         }
         .onOpenURL { url in
             handleDeepLink(url)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                dictionaryService.refreshWordOfTheDayIfNeeded()
+            }
         }
     }
 
